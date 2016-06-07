@@ -70,4 +70,23 @@ module SharedAdapterTests
     }
     assert_equal expected, @adapter.get(@feature)
   end
+
+  def test_enable_disable_get_value_for_group
+    # TODO
+  end
+
+  def test_enable_disable_and_get_value_for_actor_gate
+    actor_22 = @actor_class.new('22')
+    actor_asdf = @actor_class.new('asdf')
+
+    assert_equal @adapter.enable(@feature, @actor_gate, @flipper.actor(actor_22)), true
+    assert_equal @adapter.enable(@feature, @actor_gate, @flipper.actor(actor_asdf)), true
+
+    result = @adapter.get(@feature)
+    assert_equal result[:actors], Set['22', 'asdf']
+
+    assert @adapter.disable(@feature, @actor_gate, @flipper.actor(actor_22)), true
+    result = @adapter.get(@feature)
+    assert_equal result[:actors], Set['asdf']
+  end
 end

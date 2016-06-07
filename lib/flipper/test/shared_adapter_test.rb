@@ -53,7 +53,7 @@ module SharedAdapterTests
     assert_equal nil, @adapter.get(@feature)[:boolean]
   end
 
-  def test_disable_all
+  def test_can_disable_all
     actor_22 = @actor_class.new('22')
     assert_equal true, @adapter.enable(@feature, @boolean_gate, @flipper.boolean)
     assert_equal true, @adapter.enable(@feature, @boolean_gate, @flipper.group(:admins))
@@ -71,22 +71,44 @@ module SharedAdapterTests
     assert_equal expected, @adapter.get(@feature)
   end
 
-  def test_enable_disable_get_value_for_group
-    # TODO
+  def test_can_enable_disable_get_value_for_group_gate
+    assert_equal true, @adapter.enable(@feature, @group_gate, @flipper.group(:admins))
+    assert_equal true, @adapter.enable(@feature, @group_gate, @flipper.group(:early_access))
+
+    result = @adapter.get(@feature)
+    assert_equal Set['admins', 'early_access'], result[:groups]
+
+    assert_equal true, @adapter.disable(@feature, @group_gate, @flipper.group(:early_access))
+    result = @adapter.get(@feature)
+    assert_equal Set['admins'], result[:groups]
+
+    assert_equal true, @adapter.disable(@feature, @group_gate, @flipper.group(:admins))
+    result = @adapter.get(@feature)
+    assert_equal Set.new, result[:groups]
   end
 
-  def test_enable_disable_and_get_value_for_actor_gate
+  def test_can_enable_disable_and_get_value_for_an_actor_gate
     actor_22 = @actor_class.new('22')
     actor_asdf = @actor_class.new('asdf')
 
-    assert_equal @adapter.enable(@feature, @actor_gate, @flipper.actor(actor_22)), true
-    assert_equal @adapter.enable(@feature, @actor_gate, @flipper.actor(actor_asdf)), true
+    assert_equal true, @adapter.enable(@feature, @actor_gate, @flipper.actor(actor_22))
+    assert_equal true, @adapter.enable(@feature, @actor_gate, @flipper.actor(actor_asdf))
 
     result = @adapter.get(@feature)
-    assert_equal result[:actors], Set['22', 'asdf']
+    assert_equal Set['22', 'asdf'], result[:actors]
 
-    assert @adapter.disable(@feature, @actor_gate, @flipper.actor(actor_22)), true
+    assert true, @adapter.disable(@feature, @actor_gate, @flipper.actor(actor_22))
     result = @adapter.get(@feature)
-    assert_equal result[:actors], Set['asdf']
+    assert_equal Set['asdf'], result[:actors]
+  end
+
+  def test_can_enable_disable_get_value_for_percentage_of_actors_gate
+    assert_equal true, @adapter.enable(@feature, @actors_gate, @flipper.actors(15))
+    result = @adapter.get(@feature)
+    assert_equal '15', result[:percentage_of_actors]
+
+    assert_equal true, @adapter.disable(@feature, @actors_gate, @flipper.actors(0))
+    result = @adapter.get(@feature)
+    assert_equal '0', result[:percentage_of_actors]
   end
 end
